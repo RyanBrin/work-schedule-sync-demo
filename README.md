@@ -4,20 +4,31 @@
 > it contains **no source code, no configuration, and no real data**. The real
 > implementation is kept in a private repository.
 
-A **private schedule-automation tool** that turns a personal work schedule into
-calendar events and optional summary reminders.
+A **private schedule-automation tool** that turns posted work-schedule text into
+calendar events and summary reminders. It is the headless automation engine for
+two jobs with different sync strategies — deterministic by design, with no OCR,
+no image processing, and no model inference.
 
 ## What it does
 
-- Reads a personal work schedule and **syncs shifts to a personal calendar**.
-- Automates calendar entries so the schedule stays current without manual entry.
-- Sends optional **SMS/email summaries** of upcoming shifts (opt-in).
+- Parses posted schedule text and **syncs shifts to a personal calendar**,
+  without duplicating events on a re-post.
+- Accepts that text over a **token-authenticated endpoint**, so the paste happens
+  in the [Nexus](https://github.com/RyanBrin/nexus-demo) operator surface rather
+  than in this project's own web page. The original HTML form is retired; the
+  automation engine is what remains.
+- Runs on **time-based triggers**, so the job that can be read automatically
+  stays current with no paste at all.
+- Sends **SMS/email summaries** of upcoming shifts on a fixed daily cadence.
 
 ## Key features
 
-- Schedule → calendar automation.
-- Optional shift-summary notifications (ASCII-safe, concise).
-- Runs as a lightweight scheduled automation.
+- Schedule → calendar automation with duplicate-safe writes.
+- **Deterministic parsing** — input it does not recognise is rejected rather than
+  approximated, so a bad paste fails loudly instead of inventing a shift.
+- Shift-summary notifications (ASCII-safe, concise).
+- Runs as a lightweight scheduled automation with a token-authenticated bridge
+  endpoint.
 
 ## Privacy & security posture
 
@@ -30,8 +41,9 @@ calendar events and optional summary reminders.
 
 ## Technologies
 
-- JavaScript / Google Apps Script
-- Google Calendar automation; optional email/SMS summaries
+- JavaScript / Google Apps Script (deployed by `clasp`, not by git)
+- Google Calendar automation; email/SMS summaries
+- Token-authenticated `doPost` bridge consumed by the Nexus platform
 
 ## Notes
 
