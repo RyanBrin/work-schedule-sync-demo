@@ -1,54 +1,59 @@
 # Work Schedule Sync — Project Overview (Demo)
 
-> Public overview of a **private** project. This repository is documentation only —
-> it contains **no source code, no configuration, and no real data**. The real
-> implementation is kept in a private repository.
+> Public overview of a **private** project. This repository is documentation only:
+> it contains **no source code, configuration, credentials, or real schedule data**.
 
-A **private schedule-automation tool** that turns posted work-schedule text into
-calendar events and summary reminders. It is the headless automation engine for
-two jobs with different sync strategies — deterministic by design, with no OCR,
-no image processing, and no model inference.
+Work Schedule Sync is a deterministic automation engine that converts posted schedule
+text and calendar-feed updates into duplicate-safe calendar events and concise status
+notifications. Its visual entry point lives in Nexus; the automation continues to run as
+a headless Google Apps Script service.
 
 ## What it does
 
-- Parses posted schedule text and **syncs shifts to a personal calendar**,
-  without duplicating events on a re-post.
-- Accepts that text over a **token-authenticated endpoint**, so the paste happens
-  in the [Nexus](https://github.com/RyanBrin/nexus-demo) operator surface rather
-  than in this project's own web page. The original HTML form is retired; the
-  automation engine is what remains.
-- Runs on **time-based triggers**, so the job that can be read automatically
-  stays current with no paste at all.
-- Sends **SMS/email summaries** of upcoming shifts on a fixed daily cadence.
+- Parses supported schedule text and rejects unrecognized input instead of guessing.
+- Accepts text through a token-authenticated bridge used by the Nexus operator surface.
+- Imports a separate calendar source on time-based triggers.
+- Creates or updates calendar events without duplicating existing shifts.
+- Reports overlaps without deleting, merging, or silently changing either event.
+- Rechecks saved source text during automatic syncs and flags stale entries.
 
-## Key features
+## Notification delivery
 
-- Schedule → calendar automation with duplicate-safe writes.
-- **Deterministic parsing** — input it does not recognise is rejected rather than
-  approximated, so a bad paste fails loudly instead of inventing a shift.
-- Shift-summary notifications (ASCII-safe, concise).
-- Runs as a lightweight scheduled automation with a token-authenticated bridge
-  endpoint.
+Sync results are delivered by email and through a short-message channel governed by a
+stored notification policy:
 
-## Privacy & security posture
+1. Telegram Bot API is the preferred short-message transport when configured.
+2. Twilio SMS is used when Telegram is not configured and Twilio is configured.
+3. Legacy carrier email-to-SMS gateway settings are intentionally ignored because that
+   transport is no longer reliable.
 
-- **No personal schedule data, employer/location details, phone numbers, or email
-  addresses** are included in this overview.
-- Recipients and any credentials live only in private config — never committed,
-  never shown publicly.
-- The concept (e.g. retail shift sync) is described generically; real schedule
-  data is private.
+Quiet, unchanged runs are suppressed except for the scheduled heartbeat, while conflicts
+and meaningful changes remain visible. Credentials and recipient identifiers stay in
+private Script Properties and are never logged or committed.
+
+## Architecture
+
+```text
+Nexus operator surface -> authenticated Apps Script bridge -> deterministic parser
+                                                            -> calendar reconciliation
+Scheduled source check -------------------------------------^          |
+                                                                       +-> email
+                                                                       +-> Telegram / Twilio
+```
 
 ## Technologies
 
-- JavaScript / Google Apps Script (deployed by `clasp`, not by git)
-- Google Calendar automation; email/SMS summaries
-- Token-authenticated `doPost` bridge consumed by the Nexus platform
+- JavaScript on Google Apps Script, deployed with `clasp`
+- Google Calendar and time-based triggers
+- Telegram Bot API with Twilio SMS fallback
+- Token-authenticated `doPost` bridge consumed by Nexus
 
-## Notes
+## Privacy and security posture
 
-- The real source code and commit history are **private**.
-- Any examples are **sanitized/mock** — no real shifts, dates, locations, or
-  contact details.
+- No employer, location, shift, recipient, phone, email, or calendar identifiers are
+  included in this repository.
+- Parsing is deterministic; no OCR, image processing, or model inference is used.
+- Notification and bridge credentials live only in private configuration.
+- Any examples are sanitized or synthetic.
 
 See [`docs/architecture.md`](docs/architecture.md) for a high-level architecture summary.
